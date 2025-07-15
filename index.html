@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login & Buat Akun</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      width: 300px;
+      margin: 100px auto;
+      background-color: white;
+      padding: 20px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+
+    input, button {
+      padding: 10px;
+      margin: 10px 0;
+      width: 100%;
+      border-radius: 5px;
+      box-sizing: border-box;
+    }
+
+    input {
+      border: 1px solid #ccc;
+    }
+
+    button {
+      border: none;
+      background-color: #3efa41;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .switch {
+      text-align: center;
+      margin-top: 15px;
+    }
+
+    .error-message {
+      color: red;
+      font-weight: bold;
+      text-align: center;
+      display: none;
+    }
+  </style>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+</head>
+<body>
+
+<div class="container">
+  <div id="login-form">
+    <h1>Login</h1>
+    <input type="text" id="login-username" placeholder="Username" />
+    <input type="password" id="login-password" placeholder="Password" />
+    <button id="login-btn">Login</button>
+    <div class="error-message" id="login-error">Username atau password salah!</div>
+  </div>
+
+  <div id="register-form" style="display:none;">
+    <h1>Buat Akun</h1>
+    <input type="text" id="register-username" placeholder="Username" />
+    <input type="password" id="register-password" placeholder="Password" />
+    <button id="register-btn">Buat Akun</button>
+    <div class="error-message" id="register-error">Username sudah terdaftar!</div>
+  </div>
+
+  <div class="switch">
+    <button id="switch-to-register">Buat Akun Baru</button>
+    <button id="switch-to-login" style="display:none;">Kembali ke Login</button>
+  </div>
+</div>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyA0nLjuJd1cah3yHkcWLNvmqPA5cAnSOjI",
+    authDomain: "tongsampah1-a.firebaseapp.com",
+    databaseURL: "https://tongsampah1-a-default-rtdb.firebaseio.com",
+    projectId: "tongsampah1-a",
+    storageBucket: "tongsampah1-a.appspot.com",
+    messagingSenderId: "631897766480",
+    appId: "1:631897766480:web:b12b5adc1f1d48d20f2f55",
+    measurementId: "G-4S53LK3D6X"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const database = firebase.database();
+
+  const loginForm = document.getElementById("login-form");
+  const registerForm = document.getElementById("register-form");
+  const switchToRegister = document.getElementById("switch-to-register");
+  const switchToLogin = document.getElementById("switch-to-login");
+
+  function toggleForms() {
+    if (loginForm.style.display === "none") {
+      loginForm.style.display = "block";
+      registerForm.style.display = "none";
+      switchToRegister.style.display = "block";
+      switchToLogin.style.display = "none";
+    } else {
+      loginForm.style.display = "none";
+      registerForm.style.display = "block";
+      switchToRegister.style.display = "none";
+      switchToLogin.style.display = "block";
+    }
+  }
+
+  switchToRegister.addEventListener("click", toggleForms);
+  switchToLogin.addEventListener("click", toggleForms);
+
+  document.getElementById("login-btn").addEventListener("click", () => {
+    const username = document.getElementById("login-username").value.trim();
+    const password = document.getElementById("login-password").value.trim();
+    const errorMsg = document.getElementById("login-error");
+
+    if (!username || !password) {
+      alert("Harap isi semua field.");
+      return;
+    }
+
+    database.ref("akun_viewers").child(username).once("value", (snapshot) => {
+      const data = snapshot.val();
+      if (data && data.password === password) {
+        // Simpan username ke localStorage
+        localStorage.setItem("loggedInUser", username);
+        window.location.href = "main.html";
+      } else {
+        errorMsg.style.display = "block";
+      }
+    });
+  });
+
+  document.getElementById("register-btn").addEventListener("click", () => {
+    const username = document.getElementById("register-username").value.trim();
+    const password = document.getElementById("register-password").value.trim();
+    const errorMsg = document.getElementById("register-error");
+
+    if (!username || !password) {
+      alert("Harap isi semua field.");
+      return;
+    }
+
+    database.ref("akun_viewers").child(username).once("value", (snapshot) => {
+      if (snapshot.exists()) {
+        errorMsg.style.display = "block";
+      } else {
+        database.ref("akun_viewers").child(username).set({ password }).then(() => {
+          alert("Akun berhasil dibuat!");
+          toggleForms();
+        }).catch((error) => {
+          console.error("Gagal membuat akun:", error);
+        });
+      }
+    });
+  });
+</script>
+
+</body>
+</html>
